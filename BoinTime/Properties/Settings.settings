@@ -8,5 +8,14 @@
     <Setting Name="location" Type="System.Drawing.Point" Scope="User">
       <Value Profile="(Default)">250, 250</Value>
     </Setting>
+    <Setting Name="fadeOut" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="closeWarning" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="showInTaskbar" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
