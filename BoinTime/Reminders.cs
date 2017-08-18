@@ -87,11 +87,25 @@ namespace BoinTime {
         }
 
         /// <summary>
-        /// Loops through Reminders.instance.list and calls showNotificationIfReady on each Reminder
+        /// Loops through Reminders.instance.list and calls showNotificationIfReady on each Reminder,
         /// </summary>
         public void showNotifications() {
             foreach (var reminder in list) {
                 reminder.showNotificationIfReady();
+                if (reminder.expired) {
+
+                }
+            }
+        }
+
+        /// <summary>
+        /// Removes expired Reminders from Reminders.instance.list
+        /// </summary>
+        public void removeExpired() {
+            for (int x = list.Count - 1; x > -1; x--) {
+                if (list[x].expired) {
+                    list.RemoveAt(x);
+                }
             }
         }
     }

@@ -45,7 +45,7 @@ namespace BoinTime {
                 editReminder.Dispose();
             }
 
-            // Add it to the top of panel
+            // add it to the top of panel
             editReminder = new EditReminder(reminder);
             panel.Controls.Add(editReminder);
             editReminder.Dock = DockStyle.Top;
@@ -79,10 +79,19 @@ namespace BoinTime {
         }
 
         private void tmrMain_Tick(object sender, EventArgs e) {
+            // remove all expired Reminders
+            Reminders.instance.removeExpired();
+
             // update each ReminderDisplay's remaining time label
+            // dispose ReminderDisplays for expired reminders
             foreach (var control in panel.Controls) {
                 if (control is ReminderDisplay) {
-                    (control as ReminderDisplay).updateTime();
+                    var rd = control as ReminderDisplay;
+
+                    rd.updateTime();
+                    if (rd.reminder.expired) {
+                        rd.Dispose();
+                    }
                 }
             }
 

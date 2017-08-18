@@ -203,6 +203,7 @@ namespace BoinTime {
             time(); // update time display
             setReminder(); // update reminder
             Reminders.instance.showNotifications(); // show notificaions if ready
+            Reminders.instance.removeExpired(); // remove all expired Reminders
         }
 
         #endregion

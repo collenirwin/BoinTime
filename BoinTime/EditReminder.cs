@@ -11,7 +11,6 @@ namespace BoinTime {
 
         public EditReminder(Reminder reminder = null) {
             InitializeComponent();
-            dtpStarting.MinDate = DateTime.Now;
 
             this.reminder = reminder;
 

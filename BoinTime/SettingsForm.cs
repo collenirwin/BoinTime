@@ -26,6 +26,7 @@ namespace BoinTime {
         private void tmrMain_Tick(object sender, EventArgs e) {
             // We still need to keep track of reminders while we're in the settings form
             Reminders.instance.showNotifications();
+            Reminders.instance.removeExpired();
         }
 
         private void btnSave_Click(object sender, EventArgs e) {
