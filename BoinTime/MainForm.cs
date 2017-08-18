@@ -81,10 +81,7 @@ namespace BoinTime {
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e) {
-            // save non-user-set settings
-            Settings.Default.pinned = pinned;
-            Settings.Default.location = this.Location;
-            Settings.Default.Save();
+            saveNonUserSetSettings();
 
             // clear system tray icon
             notification.Visible = false;
@@ -97,6 +94,8 @@ namespace BoinTime {
             tmrMain.Stop();
             this.Hide();
 
+            // save location/pinned so we don't lose them when we apply settings a few lines down
+            saveNonUserSetSettings();
 
             using (var settingsForm = new SettingsForm()) {
                 settingsForm.ShowDialog();
@@ -156,6 +155,12 @@ namespace BoinTime {
             closeWarning = Settings.Default.closeWarning;
             this.ShowInTaskbar = Settings.Default.showInTaskbar;
             lblAMPM.Visible = Settings.Default.showAMPM;
+        }
+
+        private void saveNonUserSetSettings() {
+            Settings.Default.pinned = pinned;
+            Settings.Default.location = this.Location;
+            Settings.Default.Save();
         }
 
         private void setReminder() {
