@@ -1,21 +1,57 @@
 ﻿using BoinMsgNS;
+using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.IO;
 
 namespace BoinTime {
-    public static class Reminders {
-        public static List<Reminder> list { get; private set; }
+    public class Reminders {
 
-        public static void init() {
+        public const string FILE_PATH = "reminders.json";
+
+        // set up singleton instance
+        static Reminders _instance;
+        public static Reminders instance {
+            get {
+                if (_instance == null) {
+                    _instance = new Reminders();
+                }
+
+                return _instance;
+            }
+        }
+
+        public List<Reminder> list { get; private set; }
+
+        private Reminders() {
             list = new List<Reminder>();
 
-            if (!loadReminders()) {
-                BoinMsg.show("Could not load your saved reminders.", "Error - BoinTime");
+            // try to load reminders from FILE_PATH, tell the user if we can't
+            if (!load()) {
+                BoinMsg.show("Could not access '" + FILE_PATH + "'. Your reminders will not be saved.", "Error - BoinTime");
             }
         }
 
-        public static bool loadReminders() {
+        /// <summary>
+        /// Loads reminders from file into Reminders.instance.list
+        /// </summary>
+        /// <returns>false if an exception was thrown</returns>
+        public bool load() {
             try {
-                // read file into list
+                // if our file isn't there, make it
+                if (!File.Exists(FILE_PATH)) {
+                    using (var writer = File.CreateText(FILE_PATH)) {
+                        writer.Write("");
+                    }
+                }
+
+                // load json object in from FILE_PATH
+                string json = File.ReadAllText(FILE_PATH);
+
+                // if the file wasn't empty, deserialize and put it into this.list
+                if (json != "") {
+                    list = JsonConvert.DeserializeObject<List<Reminder>>(json);
+                }
+
             } catch {
                 return false;
             }
@@ -23,9 +59,17 @@ namespace BoinTime {
             return true;
         }
 
-        public static bool saveReminders() {
+        /// <summary>
+        /// Serialize Reminders.instance.list to JSON and write it to a file at /
+        /// </summary>
+        /// <returns>false if an exception was thrown</returns>
+        public bool save() {
             try {
-                // save to a file
+                // serialize to JSON, write to FILE_PATH
+                using (var writer = File.CreateText(FILE_PATH)) {
+                    writer.Write(JsonConvert.SerializeObject(list));
+                }
+
             } catch {
                 return false;
             }
@@ -33,9 +77,21 @@ namespace BoinTime {
             return true;
         }
 
-        public static void sort() {
+        /// <summary>
+        /// Sorts Reminders.instance.list
+        /// </summary>
+        public void sort() {
             if (list != null) {
                 list.Sort();
+            }
+        }
+
+        /// <summary>
+        /// Loops through Reminders.instance.list and calls showNotificationIfReady on each Reminder
+        /// </summary>
+        public void showNotifications() {
+            foreach (var reminder in list) {
+                reminder.showNotificationIfReady();
             }
         }
     }

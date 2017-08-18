@@ -44,11 +44,11 @@
             // dtpStarting
             // 
             this.dtpStarting.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.dtpStarting.CustomFormat = " MM/dd/yyyy, h:mm";
+            this.dtpStarting.CustomFormat = " MM/dd/yyyy, h:mm:ss tt";
             this.dtpStarting.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
             this.dtpStarting.Location = new System.Drawing.Point(93, 112);
             this.dtpStarting.Name = "dtpStarting";
-            this.dtpStarting.Size = new System.Drawing.Size(146, 23);
+            this.dtpStarting.Size = new System.Drawing.Size(172, 23);
             this.dtpStarting.TabIndex = 15;
             // 
             // lblStarting

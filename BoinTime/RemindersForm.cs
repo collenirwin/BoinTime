@@ -1,13 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using BoinMsgNS;
 
 namespace BoinTime {
     public partial class RemindersForm : Form {
@@ -16,23 +9,85 @@ namespace BoinTime {
 
         public RemindersForm() {
             InitializeComponent();
+            listReminders();
         }
 
-        private void btnNew_Click(object sender, EventArgs e) {
+        private void listReminders() {
+            tmrMain.Stop();
+
+            // remove all controls from the panel
+            foreach (Control control in panel.Controls) {
+                control.Dispose();
+            }
+
+            panel.Controls.Clear();
+
+            // stop redrawing panel
+            panel.SuspendLayout();
+
+            // add all reminders in ReminderDisplays to the panel
+            foreach (var reminder in Reminders.instance.list) {
+                var rd = new ReminderDisplay(reminder);
+                panel.Controls.Add(rd);
+                rd.Dock = DockStyle.Top;
+                rd.BringToFront();
+                rd.edit += new EventHandler<ReminderEventArgs>(reminderDisplay_edit);
+            }
+
+            // resume redrawing panel
+            panel.ResumeLayout();
+            tmrMain.Start();
+        }
+
+        private void showEditControl(Reminder reminder = null) {
+            // get rid of it if it already exists
             if (editReminder != null) {
                 editReminder.Dispose();
             }
 
-            editReminder = new EditReminder();
+            // Add it to the top of panel
+            editReminder = new EditReminder(reminder);
             panel.Controls.Add(editReminder);
             editReminder.Dock = DockStyle.Top;
-            editReminder.BringToFront();
+            editReminder.SendToBack();
+            editReminder.editDone += new EventHandler<ReminderEventArgs>(editReminder_editDone);
 
-            editReminder.editDone += new EventHandler(editReminder_editDone);
+            // scroll panel to top
+            panel.AutoScrollPosition = new Point(0, 0);
         }
 
-        private void editReminder_editDone(object sender, EventArgs e) {
+        private void btnNew_Click(object sender, EventArgs e) {
+            showEditControl();
+        }
 
+        private void editReminder_editDone(object sender, ReminderEventArgs e) {
+            // if a reminder was just created, add it to the list
+            if (e.isNew) {
+                Reminders.instance.list.Add(e.reminder);
+            }
+
+            listReminders();
+        }
+
+        private void reminderDisplay_edit(object sender, ReminderEventArgs e) {
+            showEditControl(e.reminder);
+        }
+
+        private void RemindersForm_FormClosing(object sender, FormClosingEventArgs e) {
+            // write reminders to a file when closing
+            Reminders.instance.save();
+        }
+
+        private void tmrMain_Tick(object sender, EventArgs e) {
+            // update each ReminderDisplay's remaining time label
+            foreach (var control in panel.Controls) {
+                if (control is ReminderDisplay) {
+                    (control as ReminderDisplay).updateTime();
+                }
+            }
+
+            // show notificaions if ready
+            Reminders.instance.showNotifications();
         }
     }
 }

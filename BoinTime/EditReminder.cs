@@ -5,22 +5,25 @@ using System.Windows.Forms;
 namespace BoinTime {
     public partial class EditReminder : UserControl {
 
-        public event EventHandler editDone;
+        public event EventHandler<ReminderEventArgs> editDone;
 
         public Reminder reminder { get; private set; }
-        public bool isNew { get; private set; }
 
         public EditReminder(Reminder reminder = null) {
             InitializeComponent();
+            dtpStarting.MinDate = DateTime.Now;
+
             this.reminder = reminder;
 
-            if (reminder != null) {
+            if (reminder != null) { // set all controls to reflect the value of the reminder
                 lblTitle.Text = "Edit Reminder";
                 txtDescription.Text = reminder.description;
-                cboEvery.SelectedIndex = (int)reminder.type;
+                cboType.SelectedIndex = (int)reminder.type;
                 txtEvery.Value = reminder.customValue;
                 cboEvery.SelectedIndex = (int)reminder.customType;
-                isNew = false;
+                chkNotification.Checked = reminder.showNotification;
+                txtNotification.Value = reminder.notificationMins;
+                dtpStarting.Value = reminder.date;
 
             } else { // no reminder passed; we're creating one
                 lblTitle.Text = "New Reminder";
@@ -28,7 +31,6 @@ namespace BoinTime {
                 dtpStarting.Value = DateTime.Now;
                 txtEvery.Value = 45;
                 cboEvery.SelectedIndex = 0;
-                isNew = true;
             }
         }
 
@@ -45,36 +47,51 @@ namespace BoinTime {
         }
 
         private void btnDone_Click(object sender, EventArgs e) {
-            if (txtDescription.Text.Trim() != "") {
-                // set all properties of this.reminder to reflect the user input
-                if (reminder == null) {
-                    reminder = new Reminder(
-                        txtDescription.Text,
-                        (ReminderType)cboType.SelectedIndex,
-                        dtpStarting.Value,
-                        (CustomType)cboEvery.SelectedIndex,
-                        (int)txtEvery.Value,
-                        chkNotification.Checked,
-                        (int)txtNotification.Value
-                    );
+            if (dtpStarting.Value > DateTime.Now) {
 
-                } else {
-                    reminder.description = txtDescription.Text;
-                    reminder.type = (ReminderType)cboType.SelectedIndex;
-                    reminder.date = dtpStarting.Value;
-                    reminder.customType = (CustomType)cboEvery.SelectedIndex;
-                    reminder.customValue = (int)txtEvery.Value;
-                    reminder.showNotification = chkNotification.Checked;
-                    reminder.notificationMins = (int)txtNotification.Value;
+                if (txtDescription.Text.Trim() != "") {
+                    // set all properties of this.reminder to reflect the user's input
+                    if (reminder == null) {
+                        reminder = new Reminder(
+                            txtDescription.Text,
+                            (ReminderType)cboType.SelectedIndex,
+                            dtpStarting.Value,
+                            (CustomType)cboEvery.SelectedIndex,
+                            (int)txtEvery.Value,
+                            chkNotification.Checked,
+                            (int)txtNotification.Value
+                        );
+
+                        // trigger editDone event (new)
+                        editDone(this, new ReminderEventArgs(reminder, true));
+
+                    } else {
+                        reminder.description = txtDescription.Text;
+                        reminder.type = (ReminderType)cboType.SelectedIndex;
+                        reminder.date = dtpStarting.Value;
+                        reminder.customType = (CustomType)cboEvery.SelectedIndex;
+                        reminder.customValue = (int)txtEvery.Value;
+                        reminder.showNotification = chkNotification.Checked;
+                        reminder.notificationMins = (int)txtNotification.Value;
+                        reminder.notificationShown = false;
+
+                        // trigger editDone event (not new)
+                        editDone(this, new ReminderEventArgs(reminder, false));
+                    }
+
+                    // close the control
+                    this.Dispose();
+
+                } else { // no description entered
+                    BoinMsg.show("Please provide a description for this reminder", "BoinTime");
+                    txtDescription.Focus();
                 }
 
-                // trigger editDone event
-                editDone(this, new EventArgs());
-
-            } else {
-                BoinMsg.show("Please provide a description for this reminder", "BoinTime");
-                txtDescription.Focus();
+            } else { // selected date has passed
+                BoinMsg.show("Your selected date for this reminder must be in the future", "BoinTime");
+                dtpStarting.Focus();
             }
+           
         }
 
         private void btnClose_Click(object sender, EventArgs e) {

@@ -9,9 +9,17 @@ namespace BoinTime {
 
         #region Vars
 
-        const int EXPANDED_HEIGHT  = 158;
-        const int COLLAPSED_HEIGHT = 121;
-        
+        static MainForm _instance;
+        public static MainForm instance {
+            get {
+                if (_instance == null) {
+                    _instance = new MainForm();
+                }
+
+                return _instance;
+            }
+        }
+
         bool pinned;
 
         public static bool closeWarning;
@@ -33,35 +41,16 @@ namespace BoinTime {
 
         #region Constructor & Form Events
 
-        public MainForm() {
+        private MainForm() {
             InitializeComponent();
-            Reminders.init();
-            checkForNoReminders();
+
+            setReminder();
             time();
 
-            // load settings
-            pinned = Settings.Default.pinned;
-            btnPin.Text = (pinned) ? "Move" : "Pin";
-            this.Location = Settings.Default.location;
-            closeWarning = Settings.Default.closeWarning;
-            fadeOut = Settings.Default.fadeOut;
-            this.ShowInTaskbar = Settings.Default.showInTaskbar;
-        }
+            applySettings();
 
-        private void checkForNoReminders() {
-            if (Reminders.list.Count == 0) {
-                txtReminder.Text = "No reminders set";
-                txtReminder.SelectAll();
-                txtReminder.SelectionAlignment = HorizontalAlignment.Center;
-                txtReminder.SelectionLength = 0;
-                defocus();
-            }
-        }
-
-        private void defocus() {
-            // take focus away from all controls
-            btnFocus.Select();
-            btnFocus.Focus();
+            // start global timer
+            tmrMain.Start();
         }
 
         private void pnlTopBar_MouseDown(object sender, MouseEventArgs e) {
@@ -91,51 +80,102 @@ namespace BoinTime {
             this.Close();
         }
 
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e) {
+            // save non-user-set settings
+            Settings.Default.pinned = pinned;
+            Settings.Default.location = this.Location;
+            Settings.Default.Save();
+
+            // clear system tray icon
+            notification.Visible = false;
+
+            // serialize reminders and save them
+            Reminders.instance.save();
+        }
+
         private void btnSettings_Click(object sender, EventArgs e) {
-            // TODO: open settings form
+            tmrMain.Stop();
+            this.Hide();
+
+
+            using (var settingsForm = new SettingsForm()) {
+                settingsForm.ShowDialog();
+            }
+
+            applySettings(); // apply what the user just changed
+
+            // update time and reminders before showing the form again
+            setReminder();
+            time();
+            this.Show();
+            tmrMain.Start();
         }
 
         private void btnManageReminders_Click(object sender, EventArgs e) {
             tmrMain.Stop();
             this.Hide();
 
+
             using (var remindersForm = new RemindersForm()) {
                 remindersForm.ShowDialog();
             }
 
-            checkForNoReminders();
-            time(); // update time and reminders before showing the form again
+            // update time and reminders before showing the form again
+            setReminder();
+            time();
             this.Show();
             tmrMain.Start();
         }
 
-        private void Form1_FormClosing(object sender, FormClosingEventArgs e) {
-            // save non-user-set settings
-            Settings.Default.pinned = pinned;
-            Settings.Default.location = this.Location;
-            Settings.Default.Save();
-        }
-
         private void Form1_Resize(object sender, EventArgs e) {
+            // don't allow the form to minimize
             if (this.WindowState == FormWindowState.Minimized) {
                 this.WindowState = FormWindowState.Normal;
             }
         }
 
-        private void Form1_MouseEnter(object sender, EventArgs e) {
-            this.Opacity = 1.0;
-        }
-
         private void Form1_MouseLeave(object sender, EventArgs e) {
-            if (fadeOut && !this.Bounds.Contains(Cursor.Position)) {
-                try {
-                    this.Opacity = 0.7;
-                } catch { } // should only error out if the Form is closing
-            }
+            defocus();
         }
 
         private void Form1_Leave(object sender, EventArgs e) {
             defocus();
+        }
+
+        #endregion
+
+        #region Helper Methods
+
+        private void applySettings() {
+            // apply user settings
+            pinned = Settings.Default.pinned;
+            btnPin.Text = (pinned) ? "Move" : "Pin";
+
+            this.Location = Settings.Default.location;
+
+            closeWarning = Settings.Default.closeWarning;
+            this.ShowInTaskbar = Settings.Default.showInTaskbar;
+            lblAMPM.Visible = Settings.Default.showAMPM;
+        }
+
+        private void setReminder() {
+            // no reminder available
+            if (Reminders.instance.list.Count == 0) {
+                this.Size = this.MinimumSize; // don't show the reminder labels
+            } else { // we have reminders
+                this.Size = this.MaximumSize;
+
+                // sort reminders by their remaining time and display the next one to go off
+                Reminders.instance.sort();
+                lblReminder.Text     = Reminders.instance.list[0].description;
+                lblReminderTime.Text = Reminders.instance.list[0].timeRemainingPrettified();
+            }
+        }
+
+        private void defocus() {
+            // take focus away from all controls
+            btnFocus.Select();
+            btnFocus.Focus();
         }
 
         #endregion
@@ -146,18 +186,31 @@ namespace BoinTime {
             var now = DateTime.Now;
 
             // set our time display
-            lblMain.Text = now.ToString("h:mm tt", CultureInfo.InvariantCulture);
+            if (Settings.Default.use24HourFormat) {
+                lblMain.Text = now.ToString("H:mm", CultureInfo.InvariantCulture);
+            } else {
+                lblMain.Text = now.ToString("h:mm", CultureInfo.InvariantCulture);
+            }
+            
+            // seconds
             lblSec.Text = now.Second.ToString().PadLeft(2, '0');
 
-            // update our reminder
-            // TODO: center text in box, bold the remaining time
-            if (Reminders.list.Count > 0) {
-
-            }
+            // AM / PM
+            lblAMPM.Text = now.ToString("tt", CultureInfo.InvariantCulture);
         }
 
         private void tmrMain_Tick(object sender, EventArgs e) {
-            time();
+            time(); // update time display
+            setReminder(); // update reminder
+            Reminders.instance.showNotifications(); // show notificaions if ready
+        }
+
+        #endregion
+
+        #region Context Menu Strip
+
+        private void closeToolStripMenuItem_Click(object sender, EventArgs e) {
+            this.Close();
         }
 
         #endregion

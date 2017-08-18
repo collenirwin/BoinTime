@@ -2,6 +2,9 @@
 Thumbs.db
 ehthumbs.db
 
+# Generated file
+reminders.json
+
 # Folder config file
 Desktop.ini
 

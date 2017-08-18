@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Windows.Forms;
 
 namespace BoinTime {
 
@@ -31,7 +32,7 @@ namespace BoinTime {
 
         public bool showNotification { get; set; }
         public int notificationMins { get; set; }
-        public bool notificationShown { get; private set; }
+        public bool notificationShown { get; set; }
 
         public bool expired { get; private set; }
         
@@ -51,60 +52,126 @@ namespace BoinTime {
             this.expired = false;
         }
 
+        /// <summary>
+        /// Gets time reaining between this.date and now
+        /// </summary>
         public TimeSpan timeRemaining() {
             return timeRemaining(DateTime.Now);
         }
 
+        /// <summary>
+        /// Gets time reaining between this.date and fromDate
+        /// </summary>
         public TimeSpan timeRemaining(DateTime fromDate) {
             var oldDate = new DateTime(date.Ticks); // copy this.date
 
             // while this.date has passed fromDate, set this.date to the next date based on this.type
             // ex: fromDate is 1/3/17 and we have a daily reminder that's date property is 1/1/17
             // if we just added a day to the date, it would still be in the past, so we add days until it isn't
-            while (!expired && (fromDate - date).TotalMilliseconds <= 0) {
+            while (!expired && (date - fromDate).TotalMilliseconds <= 0) {
                 if (type == ReminderType.once) {
                     expired = true;
                 } else if (type == ReminderType.hourly) {
-                    date.AddHours(1);
+                    date = date.AddHours(1);
                 } else if (type == ReminderType.daily) {
-                    date.AddDays(1);
+                    date = date.AddDays(1);
                 } else if (type == ReminderType.weekly) {
-                    date.AddDays(7);
+                    date = date.AddDays(7);
                 } else if (type == ReminderType.monthly) {
-                    date.AddMonths(1);
+                    date = date.AddMonths(1);
                 } else if (type == ReminderType.yearly) {
-                    date.AddYears(1);
+                    date = date.AddYears(1);
                 } else { // custom (or 'every')
                     if (customType == CustomType.minutes) {
-                        date.AddMinutes(customValue);
+                        date = date.AddMinutes(customValue);
                     } else if (customType == CustomType.hours) {
-                        date.AddHours(customValue);
+                        date = date.AddHours(customValue);
                     } else if (customType == CustomType.days) {
-                        date.AddDays(customValue);
+                        date = date.AddDays(customValue);
                     } else if (customType == CustomType.weeks) {
-                        date.AddDays(customValue * 7);
+                        date = date.AddDays(customValue * 7);
                     } else if (customType == CustomType.months) {
-                        date.AddMonths(customValue);
+                        date = date.AddMonths(customValue);
                     } else if (customType == CustomType.years) {
-                        date.AddYears(customValue);
+                        date = date.AddYears(customValue);
                     }
                 }
             }
 
+            // if we reset the time, prime the notification
             if (oldDate.Ticks != date.Ticks) {
                 notificationShown = false;
             }
 
             // return remaining time 
-            return fromDate - date;
+            return date - fromDate;
+        }
+
+        /// <summary>
+        /// Formats the output of this.timeRemaining() ex: 2y\n37d\n
+        /// </summary>
+        public string timeRemainingPrettified() {
+            return timeRemainingPrettified(DateTime.Now, 2);
+        }
+
+        /// <summary>
+        /// Formats the output of this.timeRemaining(fromDate) ex: 2y\n37d\n
+        /// </summary>
+        public string timeRemainingPrettified(DateTime fromDate, int maxAppends) {
+            var time = timeRemaining(fromDate);
+            string prettyTime = "";
+            int appends = 0;
+
+            // years
+            if (time.Days >= 365) {
+                prettyTime += ((int)(time.Days / 365)).ToString() + "y\n";
+                appends++;
+            }
+
+            // days
+            if (time.Days > 0) {
+                prettyTime += time.Days.ToString() + "d\n";
+                if (++appends == maxAppends) {
+                    return prettyTime;
+                }
+            }
+
+            // hours
+            if (time.Hours > 0) {
+                prettyTime += time.Hours.ToString() + "h\n";
+                if (++appends == maxAppends) {
+                    return prettyTime;
+                }
+            }
+
+            // minutes
+            if (time.Minutes > 0) {
+                prettyTime += time.Minutes.ToString() + "m\n";
+                if (++appends == maxAppends) {
+                    return prettyTime;
+                }
+            }
+
+            // seconds
+            if (time.Seconds > 0) {
+                prettyTime += time.Seconds.ToString() + "s\n";
+            }
+
+            return prettyTime;
         }
 
         public void showNotificationIfReady() {
-            if (showNotification && !notificationShown) {
-                if ((DateTime.Now - date).TotalMinutes == notificationMins) {
-                    // TODO: show notification
-                    notificationShown = true;
-                }
+            // if we're scheduled to show a notification, we haven't already, and it's time to show one
+            if (showNotification && !notificationShown && (date - DateTime.Now).TotalMinutes <= notificationMins) {
+                // show the notification
+                MainForm.instance.notification.ShowBalloonTip(
+                    7000, // show for 7 seconds (Windows default)
+                    "in " + timeRemaining().Minutes.ToString() + " minutes..." , // ex: in 5 minutes...
+                    description + "\r\n(BoinTime)", // ex: take out the trash
+                    ToolTipIcon.Info
+                );
+
+                notificationShown = true;
             }
         }
 

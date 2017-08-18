@@ -23,11 +23,13 @@
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RemindersForm));
             this.pnlTitle = new System.Windows.Forms.Panel();
-            this.btnNew = new BoinBoxNS.BoinBox();
             this.lblReminders = new System.Windows.Forms.Label();
             this.panel = new System.Windows.Forms.Panel();
+            this.tmrMain = new System.Windows.Forms.Timer(this.components);
+            this.btnNew = new BoinBoxNS.BoinBox();
             this.pnlTitle.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -40,6 +42,30 @@
             this.pnlTitle.Name = "pnlTitle";
             this.pnlTitle.Size = new System.Drawing.Size(476, 46);
             this.pnlTitle.TabIndex = 15;
+            // 
+            // lblReminders
+            // 
+            this.lblReminders.AutoSize = true;
+            this.lblReminders.Font = new System.Drawing.Font("Segoe UI", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblReminders.Location = new System.Drawing.Point(12, 9);
+            this.lblReminders.Name = "lblReminders";
+            this.lblReminders.Size = new System.Drawing.Size(100, 25);
+            this.lblReminders.TabIndex = 15;
+            this.lblReminders.Text = "Reminders";
+            // 
+            // panel
+            // 
+            this.panel.AutoScroll = true;
+            this.panel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel.Location = new System.Drawing.Point(0, 46);
+            this.panel.Name = "panel";
+            this.panel.Size = new System.Drawing.Size(476, 226);
+            this.panel.TabIndex = 16;
+            // 
+            // tmrMain
+            // 
+            this.tmrMain.Interval = 1000;
+            this.tmrMain.Tick += new System.EventHandler(this.tmrMain_Tick);
             // 
             // btnNew
             // 
@@ -66,24 +92,6 @@
             this.btnNew.UseVisualStyleBackColor = false;
             this.btnNew.Click += new System.EventHandler(this.btnNew_Click);
             // 
-            // lblReminders
-            // 
-            this.lblReminders.AutoSize = true;
-            this.lblReminders.Font = new System.Drawing.Font("Segoe UI", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblReminders.Location = new System.Drawing.Point(12, 9);
-            this.lblReminders.Name = "lblReminders";
-            this.lblReminders.Size = new System.Drawing.Size(100, 25);
-            this.lblReminders.TabIndex = 15;
-            this.lblReminders.Text = "Reminders";
-            // 
-            // panel
-            // 
-            this.panel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel.Location = new System.Drawing.Point(0, 46);
-            this.panel.Name = "panel";
-            this.panel.Size = new System.Drawing.Size(476, 226);
-            this.panel.TabIndex = 16;
-            // 
             // RemindersForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -97,7 +105,9 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(492, 311);
             this.Name = "RemindersForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Reminders - BoinTime";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.RemindersForm_FormClosing);
             this.pnlTitle.ResumeLayout(false);
             this.pnlTitle.PerformLayout();
             this.ResumeLayout(false);
@@ -110,5 +120,6 @@
         private BoinBoxNS.BoinBox btnNew;
         private System.Windows.Forms.Label lblReminders;
         private System.Windows.Forms.Panel panel;
+        private System.Windows.Forms.Timer tmrMain;
     }
 }

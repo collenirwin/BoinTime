@@ -50,18 +50,6 @@ namespace BoinTime.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool fadeOut {
-            get {
-                return ((bool)(this["fadeOut"]));
-            }
-            set {
-                this["fadeOut"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool closeWarning {
             get {
                 return ((bool)(this["closeWarning"]));
@@ -80,6 +68,30 @@ namespace BoinTime.Properties {
             }
             set {
                 this["showInTaskbar"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool use24HourFormat {
+            get {
+                return ((bool)(this["use24HourFormat"]));
+            }
+            set {
+                this["use24HourFormat"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool showAMPM {
+            get {
+                return ((bool)(this["showAMPM"]));
+            }
+            set {
+                this["showAMPM"] = value;
             }
         }
     }
